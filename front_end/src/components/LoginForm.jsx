@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { login } from "@/services/authService";
 import "./login.css";
@@ -83,6 +84,10 @@ export default function LoginForm() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
+
+        <p className="login-registro">
+          Não tem conta? <Link href="/cadastro">Cadastre-se</Link>
+        </p>
       </section>
 
       <footer className="login-footer">

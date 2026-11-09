@@ -8,4 +8,12 @@ async function buscarPorUsuario(usuario) {
   return rows[0];
 }
 
-module.exports = { buscarPorUsuario };
+async function criar(usuario, senhaHash) {
+  const [result] = await db.query(
+    "INSERT INTO usuarios (usuario, senha) VALUES (?, ?)",
+    [usuario, senhaHash]
+  );
+  return { id: result.insertId, usuario };
+}
+
+module.exports = { buscarPorUsuario, criar };
