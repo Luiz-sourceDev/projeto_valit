@@ -7,7 +7,8 @@ services:
       MYSQL_ROOT_PASSWORD: senai@123
       TZ: America/Sao_Paulo
     ports:
-      - "3307:3306" # MySQL acessível no PC pela porta 3307 (evita conflito com um MySQL local)
+      # Porta do MySQL no PC (só para o Workbench). O configurar.bat escolhe uma livre.
+      - "${DB_HOST_PORT:-3307}:3306"
     volumes:
       - valit-db-data:/var/lib/mysql
       - ./backEnd/database.sql:/docker-entrypoint-initdb.d/01-database.sql:ro

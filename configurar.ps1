@@ -86,20 +86,35 @@ if ($Resetar) {
 }
 
 # 4. Portas livres?
-Passo "Verificando portas 3000, 3309 e 3307"
-$ocupadas = @()
-foreach ($p in 3000, 3309, 3307) {
+function Dono-Porta($p) {
   try {
     $c = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction Stop | Select-Object -First 1
     $proc = (Get-Process -Id $c.OwningProcess -ErrorAction SilentlyContinue).ProcessName
-    $ocupadas += "porta $p em uso por '$proc' (PID $($c.OwningProcess))"
-  } catch { }
+    return "'$proc' (PID $($c.OwningProcess))"
+  } catch { return $null }
+}
+
+Passo "Verificando portas"
+# 3000 (site) e 3309 (API) precisam estar livres
+$ocupadas = @()
+foreach ($p in 3000, 3309) {
+  $dono = Dono-Porta $p
+  if ($dono) { $ocupadas += "porta $p em uso por $dono" }
 }
 if ($ocupadas.Count -gt 0) {
   foreach ($o in $ocupadas) { Aviso $o }
-  Falhar "Feche os programas acima (ex.: outro 'npm run dev', XAMPP ou outro container) e rode o script de novo."
+  Falhar "Feche os programas acima (ex.: outro 'npm run dev' ou outro container) e rode o script de novo."
 }
-Ok "Portas livres"
+
+# MySQL do Docker: usa a primeira porta livre (pode haver um MySQL instalado no PC)
+$DbPort = $null
+foreach ($p in 3307, 3308, 3310, 3311, 3312, 33060, 33061) {
+  $dono = Dono-Porta $p
+  if ($dono) { Aviso "porta $p ja usada por $dono - tentando outra" } else { $DbPort = $p; break }
+}
+if (-not $DbPort) { Falhar "Nenhuma porta livre para o MySQL do Docker." }
+$env:DB_HOST_PORT = "$DbPort"
+Ok "Portas livres (site 3000, API 3309, MySQL do Docker $DbPort)"
 
 # 5. Build e subida
 Passo "Construindo e subindo os containers (a primeira vez demora alguns minutos)"
@@ -144,6 +159,7 @@ Write-Host "==========================================" -ForegroundColor Green
 Write-Host "  TUDO PRONTO!"                              -ForegroundColor Green
 Write-Host "  Site:   http://localhost:3000"             -ForegroundColor Green
 Write-Host "  Login:  teste@email.com / 123456"          -ForegroundColor Green
+Write-Host "  MySQL (Workbench): 127.0.0.1 porta $DbPort, root / senai@123" -ForegroundColor Green
 Write-Host "  Parar:  docker compose down"               -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 Start-Process "http://localhost:3000"
