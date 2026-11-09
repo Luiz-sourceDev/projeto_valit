@@ -118,6 +118,8 @@ foreach ($p in 3307, 3308, 3310, 3311, 3312, 33060, 33061) {
 }
 if (-not $DbPort) { Falhar "Nenhuma porta livre para o MySQL do Docker." }
 $env:DB_HOST_PORT = "$DbPort"
+# Salva a porta escolhida: o docker compose le este .env (usado tambem pelo rodar.bat)
+"DB_HOST_PORT=$DbPort" | Out-File -FilePath (Join-Path $PSScriptRoot ".env") -Encoding ascii
 Ok "Portas livres (site 3000, API 3309, MySQL do Docker $DbPort)"
 
 # 5. Build e subida
@@ -140,7 +142,7 @@ do {
 if ($LASTEXITCODE -ne 0) { Falhar "O MySQL nao respondeu. Tente: configurar.bat -Resetar" }
 docker compose exec -T db sh -c "mysql -uroot -psenai@123 < /docker-entrypoint-initdb.d/01-database.sql" 2>&1 | Out-File $Log -Append -Encoding utf8
 if ($LASTEXITCODE -ne 0) { Falhar "Nao consegui criar o banco db_valit. Tente: configurar.bat -Resetar" }
-Ok "Banco db_valit pronto (usuario teste@email.com / 123456)"
+Ok "Banco db_valit pronto"
 
 # 7. API e site respondendo?
 Passo "Testando a API"
@@ -162,9 +164,10 @@ Write-Host ""
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host "  TUDO PRONTO!"                              -ForegroundColor Green
 Write-Host "  Site:   http://localhost:3000"             -ForegroundColor Green
-Write-Host "  Login:  teste@email.com / 123456"          -ForegroundColor Green
+Write-Host "  Administrador: admin@valit.com / admin123"  -ForegroundColor Green
+Write-Host "  Funcionario:   teste@email.com / 123456"   -ForegroundColor Green
 Write-Host "  MySQL (Workbench): 127.0.0.1 porta $DbPort, root / senai@123" -ForegroundColor Green
-Write-Host "  Parar:  docker compose down"               -ForegroundColor Green
+Write-Host "  Proximas vezes: rodar.bat  |  Desligar: parar.bat" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
 Start-Process "http://localhost:3000"
 exit 0

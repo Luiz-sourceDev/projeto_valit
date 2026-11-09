@@ -8,6 +8,7 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
+  dateStrings: true, // datas voltam como "AAAA-MM-DD" (sem problema de fuso horário)
 });
 
 module.exports = pool;

@@ -1,4 +1,4 @@
-// Cria o banco, as tabelas e o usuário de teste usando os dados do .env
+// Cria o banco, as tabelas, os usuários de teste e os produtos de exemplo usando o .env
 // Uso: npm run db:setup
 require("dotenv").config();
 const fs = require("fs");
@@ -17,7 +17,13 @@ const mysql = require("mysql2/promise");
       multipleStatements: true,
     });
     await conn.query(sql);
+
+    const migrar = require("../src/database/migrate");
+    await migrar();
+    await require("../src/database/connection").end();
+
     console.log("Banco db_valit configurado com sucesso.");
+    console.log("Logins: admin@valit.com / admin123 (administrador) | teste@email.com / 123456 (funcionário)");
   } catch (err) {
     console.error("Erro ao configurar o banco:", err.message);
     process.exitCode = 1;

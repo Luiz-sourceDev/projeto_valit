@@ -52,9 +52,9 @@ timeout /t 12 /nobreak >nul
 start http://localhost:3000
 
 echo.
-echo Pronto! Login de teste: teste@email.com / 123456
+echo Pronto! Admin: admin@valit.com / admin123   Funcionario: teste@email.com / 123456
 echo Para parar o sistema, feche as duas janelas "Valit - Backend" e "Valit - Frontend".
-echo Nas proximas vezes, use o arquivo rodar.bat ^(nao precisa instalar de novo^).
+echo Nas proximas vezes, use o arquivo sem-docker-rodar.bat ^(nao precisa instalar de novo^).
 pause
 exit /b 0
 

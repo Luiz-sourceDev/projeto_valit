@@ -1,6 +1,57 @@
 @echo off
+chcp 65001 >nul
+title Valit - Rodar
 cd /d "%~dp0"
-start "Valit - Backend (porta 3309)" cmd /k "cd /d "%~dp0backEnd" && npm run dev"
-start "Valit - Frontend (porta 3000)" cmd /k "cd /d "%~dp0front_end" && npm run dev"
-timeout /t 10 /nobreak >nul
-start http://localhost:3000
+
+echo ==========================================
+echo   Projeto Valit - iniciando (Docker)
+echo ==========================================
+echo.
+
+if not exist ".env" (
+  echo Primeira vez? Rodando a configuracao completa...
+  call "%~dp0configurar.bat"
+  exit /b
+)
+
+docker info >nul 2>nul
+if not errorlevel 1 goto subir
+echo Abrindo o Docker Desktop...
+if exist "%ProgramFiles%\Docker\Docker\Docker Desktop.exe" start "" "%ProgramFiles%\Docker\Docker\Docker Desktop.exe"
+echo Aguardando o Docker iniciar...
+set /a tentativas=0
+:espera
+timeout /t 5 /nobreak >nul
+set /a tentativas+=1
+docker info >nul 2>nul
+if not errorlevel 1 goto subir
+if %tentativas% lss 36 goto espera
+echo [ERRO] O Docker nao iniciou. Abra o Docker Desktop e rode de novo.
+pause
+exit /b 1
+
+:subir
+docker compose up -d
+if errorlevel 1 (
+  echo.
+  echo [ERRO] Nao consegui subir os containers. Rode o configurar.bat para ver o diagnostico.
+  pause
+  exit /b 1
+)
+
+echo.
+echo Aguardando o site responder...
+powershell -NoProfile -Command "$f=(Get-Date).AddSeconds(90); while((Get-Date) -lt $f){ try{ if((Invoke-WebRequest http://localhost:3000 -UseBasicParsing -TimeoutSec 5).StatusCode -eq 200){exit 0} }catch{}; Start-Sleep 2 }; exit 1"
+if errorlevel 1 (
+  echo [AVISO] O site ainda nao respondeu. Aguarde mais um pouco e acesse http://localhost:3000
+) else (
+  start http://localhost:3000
+)
+
+echo.
+echo Sistema no ar: http://localhost:3000
+echo   Administrador: admin@valit.com / admin123
+echo   Funcionario:   teste@email.com / 123456
+echo Para desligar: parar.bat
+echo.
+pause

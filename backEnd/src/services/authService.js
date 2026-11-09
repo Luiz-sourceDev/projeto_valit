@@ -3,29 +3,24 @@ const jwt = require("jsonwebtoken");
 const usuarioModel = require("../models/usuarioModel");
 
 function gerarToken(user) {
-  return jwt.sign({ id: user.id, usuario: user.usuario }, process.env.JWT_SECRET, {
-    expiresIn: "8h",
-  });
+  return jwt.sign(
+    { id: user.id, usuario: user.usuario, perfil: user.perfil },
+    process.env.JWT_SECRET,
+    { expiresIn: "8h" }
+  );
 }
 
+// Retorna { token, usuario } ou { erro } quando o login não é permitido
 async function login(usuario, senha) {
   const user = await usuarioModel.buscarPorUsuario(usuario);
-  if (!user) return null;
-
-  const ok = await bcrypt.compare(senha, user.senha);
-  if (!ok) return null;
-
-  return gerarToken(user);
+  if (!user || !(await bcrypt.compare(senha, user.senha))) {
+    return { erro: "Usuário ou senha inválidos" };
+  }
+  if (!user.ativo) {
+    return { erro: "Usuário desativado. Procure o administrador." };
+  }
+  const { senha: _, ...dados } = user;
+  return { token: gerarToken(user), usuario: dados };
 }
 
-// Retorna o token do novo usuário, ou null se o e-mail já estiver cadastrado
-async function cadastrar(usuario, senha) {
-  const existente = await usuarioModel.buscarPorUsuario(usuario);
-  if (existente) return null;
-
-  const hash = await bcrypt.hash(senha, 10);
-  const user = await usuarioModel.criar(usuario, hash);
-  return gerarToken(user);
-}
-
-module.exports = { login, cadastrar };
+module.exports = { login };
