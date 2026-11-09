@@ -1,14 +1,14 @@
-import { Poppins } from "next/font/google";
+// Fonte instalada via npm (@fontsource/poppins): não depende do Google Fonts no build
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
 import "./globals.css";
-
-const poppins = Poppins({ subsets: ["latin"], weight: ["400", "500"] });
 
 export const metadata = { title: "Valit" };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="pt-BR">
-      <body className={poppins.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

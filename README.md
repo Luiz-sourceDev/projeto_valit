@@ -7,7 +7,9 @@ Sistema com login e cadastro de usuários.
 
 ## Rodando com Docker (recomendado)
 
-Só precisa do **Docker Desktop** aberto. Na pasta do projeto:
+**Jeito mais fácil (Windows):** dois cliques em **`configurar.bat`**. Ele abre o Docker Desktop se precisar, confere as portas, sobe tudo, prepara o banco, testa o login e abre o site. Se algo falhar, gera o arquivo `diagnostico.txt` com o erro. Para zerar o banco: `configurar.bat -Resetar`.
+
+Manualmente, com o **Docker Desktop** aberto, na pasta do projeto:
 
 ```bash
 docker compose up -d --build

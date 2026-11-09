@@ -1,2 +1,3 @@
 * { box-sizing: border-box; }
-body { margin: 0; background: #121315; }
+body { margin: 0; background: #121315; font-family: "Poppins", system-ui, sans-serif; }
+input, button { font-family: inherit; }
