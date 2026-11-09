@@ -5,6 +5,10 @@ Sistema com login e cadastro de usuários.
 - **backEnd/** – API em Node.js + Express + MySQL (porta **3309**)
 - **front_end/** – Next.js (porta **3000**)
 
+## Jeito rápido (Windows)
+
+Com o Node.js e o MySQL instalados, dê dois cliques em **`iniciar.bat`**. Ele instala tudo, cria o banco, sobe o backend e o frontend e abre o navegador. Nas próximas vezes, use **`rodar.bat`**.
+
 ## Pré-requisitos
 
 - Node.js 20 ou superior
