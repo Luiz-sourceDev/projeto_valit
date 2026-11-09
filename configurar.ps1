@@ -84,6 +84,10 @@ if ($Resetar) {
   docker compose down --remove-orphans 2>&1 | Out-File $Log -Append -Encoding utf8
   Ok "Containers antigos removidos (dados do banco mantidos)"
 }
+# Remove containers do Valit criados a partir de outra pasta (evita "name already in use")
+foreach ($n in "valit-db", "valit-backend", "valit-frontend") {
+  docker rm -f $n 2>&1 | Out-File $Log -Append -Encoding utf8
+}
 
 # 4. Portas livres?
 function Dono-Porta($p) {
