@@ -5,7 +5,34 @@ Sistema com login e cadastro de usuários.
 - **backEnd/** – API em Node.js + Express + MySQL (porta **3309**)
 - **front_end/** – Next.js (porta **3000**)
 
-## Jeito rápido (Windows)
+## Rodando com Docker (recomendado)
+
+Só precisa do **Docker Desktop** aberto. Na pasta do projeto:
+
+```bash
+docker compose up -d --build
+```
+
+Na primeira vez demora alguns minutos. Depois acesse http://localhost:3000 (login: teste@email.com / 123456).
+
+| Serviço | Endereço |
+|---|---|
+| Frontend | http://localhost:3000 |
+| API | http://localhost:3309/api/health |
+| MySQL (Workbench) | 127.0.0.1, porta **3307**, usuário root / senha senai@123 |
+
+Comandos úteis:
+
+```bash
+docker compose ps              # ver se os 3 containers estão rodando
+docker compose logs -f backend # ver os logs da API
+docker compose down            # parar tudo (os dados do banco são mantidos)
+docker compose down -v         # parar e APAGAR o banco (recria do zero no próximo up)
+```
+
+> Alterou o código? Rode `docker compose up -d --build` de novo.
+
+## Sem Docker: jeito rápido (Windows)
 
 Com o Node.js e o MySQL instalados, dê dois cliques em **`iniciar.bat`**. Ele instala tudo, cria o banco, sobe o backend e o frontend e abre o navegador. Nas próximas vezes, use **`rodar.bat`**.
 

@@ -1,0 +1,53 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: valit-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: senai@123
+      TZ: America/Sao_Paulo
+    ports:
+      - "3307:3306" # MySQL acessível no PC pela porta 3307 (evita conflito com um MySQL local)
+    volumes:
+      - valit-db-data:/var/lib/mysql
+      - ./backEnd/database.sql:/docker-entrypoint-initdb.d/01-database.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-psenai@123"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: ./backEnd
+    container_name: valit-backend
+    restart: unless-stopped
+    environment:
+      PORT: 3309
+      FRONTEND_URL: http://localhost:3000
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: senai@123
+      DB_NAME: db_valit
+      JWT_SECRET: f489ac2787e306b2af46e58c70b13e1b8963f32e2d09816b3332a241ccff66ed
+    ports:
+      - "3309:3309"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./front_end
+      args:
+        # Endereço que o NAVEGADOR usa para chamar a API
+        NEXT_PUBLIC_API_URL: http://localhost:3309/api
+    container_name: valit-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  valit-db-data:
