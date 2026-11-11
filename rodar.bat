@@ -31,6 +31,11 @@ pause
 exit /b 1
 
 :subir
+rem Porta do site escolhida pelo configurar.bat (padrao 3000)
+set "WEB_PORT=3000"
+for /f "usebackq tokens=1,2 delims==" %%a in (".env") do if /i "%%a"=="WEB_PORT" set "WEB_PORT=%%b"
+set "SITE=http://localhost:%WEB_PORT%"
+
 docker compose up -d
 if errorlevel 1 (
   echo.
@@ -41,15 +46,15 @@ if errorlevel 1 (
 
 echo.
 echo Aguardando o site responder...
-powershell -NoProfile -Command "$f=(Get-Date).AddSeconds(90); while((Get-Date) -lt $f){ try{ if((Invoke-WebRequest http://localhost:3000 -UseBasicParsing -TimeoutSec 5).StatusCode -eq 200){exit 0} }catch{}; Start-Sleep 2 }; exit 1"
+powershell -NoProfile -Command "$f=(Get-Date).AddSeconds(90); while((Get-Date) -lt $f){ try{ if((Invoke-WebRequest %SITE% -UseBasicParsing -TimeoutSec 5).StatusCode -eq 200){exit 0} }catch{}; Start-Sleep 2 }; exit 1"
 if errorlevel 1 (
-  echo [AVISO] O site ainda nao respondeu. Aguarde mais um pouco e acesse http://localhost:3000
+  echo [AVISO] O site ainda nao respondeu. Aguarde mais um pouco e acesse %SITE%
 ) else (
-  start http://localhost:3000
+  start %SITE%
 )
 
 echo.
-echo Sistema no ar: http://localhost:3000
+echo Sistema no ar: %SITE%
 echo   Administrador: admin@valit.com / admin123
 echo   Funcionario:   teste@email.com / 123456
 echo Para desligar: parar.bat

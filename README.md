@@ -27,7 +27,7 @@ Logins de teste, criados automaticamente na primeira vez que o sistema sobe:
 
 Como testar em 3 minutos:
 
-1. Com o Docker Desktop aberto, dê dois cliques em **`configurar.bat`** (ou rode `docker compose up -d --build`) e acesse http://localhost:3000.
+1. Com o Docker Desktop aberto, dê dois cliques em **`configurar.bat`** (ou rode `docker compose up -d --build`) e acesse o endereço mostrado no fim (normalmente http://localhost:3000).
 2. Entre como **Funcionário**: a lista já vem com 6 produtos de exemplo (vencido, vencendo em breve e dentro da validade). Cadastre um produto, clique nos cartões de resumo para filtrar e use **Exportar PDF** / **Exportar CSV**.
 3. Clique em **Sair** e entre como **Administrador**: aparecem o botão **Excluir** e o menu **Usuários**, onde é possível criar um funcionário, mudar o nível de acesso ou desativá-lo.
 4. Use o botão de lua/sol no topo para alternar entre modo claro e escuro.
@@ -70,7 +70,9 @@ Pré-requisitos: Node.js 20+ e MySQL 8 na porta 3306. Use **`sem-docker-instalar
 |---|---|
 | Site | http://localhost:3000 |
 | API | http://localhost:3309/api/health |
-| MySQL (Workbench) | 127.0.0.1 · porta exibida no fim do `configurar.bat` (padrão 3307) · root / senai@123 |
+| MySQL (Workbench) | 127.0.0.1 · porta 3307 · root / senai@123 |
+
+Se alguma dessas portas já estiver ocupada no PC (outro container, WSL, um MySQL local), o `configurar.bat` escolhe outra livre sozinho, salva no `.env` da raiz e mostra os endereços no final.
 
 ## Logins e níveis de acesso
 
@@ -323,7 +325,7 @@ module.exports = router;
 |---|---|---|
 | NEXT_PUBLIC_API_URL | http://localhost:3309/api | Endereço da API usado pelo navegador (no Docker, definido como build arg) |
 
-**.env na raiz** (criado pelo `configurar.bat`): `DB_HOST_PORT`, a porta do MySQL do Docker no PC.
+**.env na raiz** (criado pelo `configurar.bat`): `WEB_PORT`, `API_PORT` e `DB_HOST_PORT`, as portas livres escolhidas no PC (padrão 3000, 3309 e 3307).
 
 ## Rodando sem Docker
 
@@ -378,7 +380,7 @@ O banco fica no volume `valit-db-data`. O `database.sql` roda só na criação d
 | Sintoma | Causa provável | Solução |
 |---|---|---|
 | "Não foi possível conectar ao servidor" | API desligada | `rodar.bat` ou `docker compose ps` |
-| Porta em uso no `configurar.bat` | Outro programa na 3000 ou 3309 | Fechar o programa indicado |
+| Site abre em outra porta (ex.: 3001) | A 3000 estava ocupada | Normal: use o endereço mostrado no fim do `configurar.bat` |
 | "Banco indisponível (tentativa N)" nos logs | MySQL ainda subindo | Aguarde; se persistir, `configurar.bat -Resetar` |
 | Aviso de segurança do Windows | Arquivo baixado da internet | Digite R + Enter, ou `Get-ChildItem -Recurse \| Unblock-File` |
 | Mudança no código não aparece | Container antigo | Rode `configurar.bat` (reconstrói) |

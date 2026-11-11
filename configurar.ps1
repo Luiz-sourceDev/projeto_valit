@@ -98,29 +98,36 @@ function Dono-Porta($p) {
   } catch { return $null }
 }
 
-Passo "Verificando portas"
-# 3000 (site) e 3309 (API) precisam estar livres
-$ocupadas = @()
-foreach ($p in 3000, 3309) {
-  $dono = Dono-Porta $p
-  if ($dono) { $ocupadas += "porta $p em uso por $dono" }
-}
-if ($ocupadas.Count -gt 0) {
-  foreach ($o in $ocupadas) { Aviso $o }
-  Falhar "Feche os programas acima (ex.: outro 'npm run dev' ou outro container) e rode o script de novo."
+$script:PortasEscolhidas = @()
+
+# Usa a primeira porta livre da lista (pode haver outro container, WSL ou MySQL usando a padrao)
+function Escolher-Porta($nome, $candidatas) {
+  foreach ($p in $candidatas) {
+    if ($script:PortasEscolhidas -contains $p) { continue }
+    $dono = Dono-Porta $p
+    if ($dono) {
+      $container = (docker ps --filter "publish=$p" --format "{{.Names}}" 2>$null | Select-Object -First 1)
+      if ($container) { $dono = "$dono - container '$container'" }
+      Aviso "$nome`: porta $p ja usada por $dono - tentando outra"
+    } else {
+      $script:PortasEscolhidas += $p
+      return $p
+    }
+  }
+  Falhar "Nenhuma porta livre para $nome. Feche outros containers ou programas e rode de novo."
 }
 
-# MySQL do Docker: usa a primeira porta livre (pode haver um MySQL instalado no PC)
-$DbPort = $null
-foreach ($p in 3307, 3308, 3310, 3311, 3312, 33060, 33061) {
-  $dono = Dono-Porta $p
-  if ($dono) { Aviso "porta $p ja usada por $dono - tentando outra" } else { $DbPort = $p; break }
-}
-if (-not $DbPort) { Falhar "Nenhuma porta livre para o MySQL do Docker." }
-$env:DB_HOST_PORT = "$DbPort"
-# Salva a porta escolhida: o docker compose le este .env (usado tambem pelo rodar.bat)
-"DB_HOST_PORT=$DbPort" | Out-File -FilePath (Join-Path $PSScriptRoot ".env") -Encoding ascii
-Ok "Portas livres (site 3000, API 3309, MySQL do Docker $DbPort)"
+Passo "Escolhendo portas livres"
+$WebPort = Escolher-Porta "Site"  @(3000, 3001, 3002, 3003, 3005, 3080, 8080, 8081)
+$ApiPort = Escolher-Porta "API"   @(3309, 3319, 3329, 3339, 4000, 4001, 8090)
+$DbPort  = Escolher-Porta "MySQL" @(3307, 3308, 3310, 3311, 3312, 33060, 33061)
+$env:WEB_PORT = "$WebPort"; $env:API_PORT = "$ApiPort"; $env:DB_HOST_PORT = "$DbPort"
+# Salva as portas: o docker compose le este .env (usado tambem pelo rodar.bat)
+@("WEB_PORT=$WebPort", "API_PORT=$ApiPort", "DB_HOST_PORT=$DbPort") |
+  Out-File -FilePath (Join-Path $PSScriptRoot ".env") -Encoding ascii
+$SiteUrl = "http://localhost:$WebPort"
+$ApiUrl  = "http://localhost:$ApiPort/api"
+Ok "Site $WebPort, API $ApiPort, MySQL do Docker $DbPort"
 
 # 5. Build e subida
 Passo "Construindo e subindo os containers (a primeira vez demora alguns minutos)"
@@ -146,10 +153,10 @@ Ok "Banco db_valit pronto"
 
 # 7. API e site respondendo?
 Passo "Testando a API"
-if (-not (Esperar-Url "http://localhost:3309/api/health" 90)) { Falhar "A API nao respondeu em http://localhost:3309" }
+if (-not (Esperar-Url "$ApiUrl/health" 90)) { Falhar "A API nao respondeu em $ApiUrl" }
 try {
   $body = '{"usuario":"teste@email.com","senha":"123456"}'
-  $r = Invoke-RestMethod -Uri "http://localhost:3309/api/auth/login" -Method Post -ContentType "application/json" -Body $body
+  $r = Invoke-RestMethod -Uri "$ApiUrl/auth/login" -Method Post -ContentType "application/json" -Body $body
   if (-not $r.token) { throw "sem token" }
   Ok "API e login funcionando"
 } catch {
@@ -157,17 +164,17 @@ try {
 }
 
 Passo "Testando o site"
-if (-not (Esperar-Url "http://localhost:3000" 120)) { Falhar "O frontend nao respondeu em http://localhost:3000" }
+if (-not (Esperar-Url $SiteUrl 120)) { Falhar "O frontend nao respondeu em $SiteUrl" }
 Ok "Site no ar"
 
 Write-Host ""
 Write-Host "==========================================" -ForegroundColor Green
 Write-Host "  TUDO PRONTO!"                              -ForegroundColor Green
-Write-Host "  Site:   http://localhost:3000"             -ForegroundColor Green
+Write-Host "  Site:   $SiteUrl"                         -ForegroundColor Green
 Write-Host "  Administrador: admin@valit.com / admin123"  -ForegroundColor Green
 Write-Host "  Funcionario:   teste@email.com / 123456"   -ForegroundColor Green
 Write-Host "  MySQL (Workbench): 127.0.0.1 porta $DbPort, root / senai@123" -ForegroundColor Green
 Write-Host "  Proximas vezes: rodar.bat  |  Desligar: parar.bat" -ForegroundColor Green
 Write-Host "==========================================" -ForegroundColor Green
-Start-Process "http://localhost:3000"
+Start-Process $SiteUrl
 exit 0
