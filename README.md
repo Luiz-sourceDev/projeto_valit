@@ -1,5 +1,6 @@
 # Valit
 
+
 Sistema web para **controle de validade de produtos** em pequenas e médias empresas: mostra o que está vencido ou perto de vencer, para reduzir desperdício, prejuízo e descarte de mercadorias.
 
 Projeto **PSOF · 3MD · Manhã** · [Logo no Canva](https://canva.link/0sfddx651wxve7n)
@@ -25,7 +26,7 @@ Logins de teste, criados automaticamente na primeira vez que a API inicia:
 | **Administrador** | `admin@valit.com` | `admin123` | Tudo: produtos, exclusão, relatórios e a tela **Usuários** |
 | **Funcionário** | `teste@email.com` | `123456` | Produtos (cadastrar, editar, filtrar) e relatórios; sem exclusão e sem Usuários |
 
-Como testar em 3 minutos:
+Como testar:
 
 1. Rode o projeto seguindo [Como rodar](#como-rodar) e acesse http://localhost:3000.
 2. Entre como **Funcionário**: a lista já vem com 6 produtos de exemplo (vencido, vencendo em breve e dentro da validade). Cadastre um produto, clique nos cartões de resumo para filtrar e use **Exportar PDF** / **Exportar CSV**.
