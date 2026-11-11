@@ -12,13 +12,13 @@ Projeto **PSOF · 3MD · Manhã** · [Logo no Canva](https://canva.link/0sfddx65
 | Luiz Fillipe Santana dos Reis | Desenvolvedor de Banco de Dados |
 | Matheus Rodrigues da Silva | Desenvolvedor Front-End |
 
-**Sumário:** [Acesso para avaliação](#acesso-para-avaliação) · [Funcionalidades](#funcionalidades) · [Início rápido](#início-rápido) · [Logins e níveis de acesso](#logins-e-níveis-de-acesso) · [Documentação de desenvolvimento](#documentação-de-desenvolvimento)
+**Sumário:** [Acesso para avaliação](#acesso-para-avaliação) · [Funcionalidades](#funcionalidades) · [Como rodar](#como-rodar) · [Logins e níveis de acesso](#logins-e-níveis-de-acesso) · [Documentação de desenvolvimento](#documentação-de-desenvolvimento)
 
 ---
 
 ## Acesso para avaliação
 
-Logins de teste, criados automaticamente na primeira vez que o sistema sobe:
+Logins de teste, criados automaticamente na primeira vez que a API inicia:
 
 | Perfil | E-mail | Senha | O que dá para testar |
 |---|---|---|---|
@@ -27,7 +27,7 @@ Logins de teste, criados automaticamente na primeira vez que o sistema sobe:
 
 Como testar em 3 minutos:
 
-1. Com o Docker Desktop aberto, dê dois cliques em **`configurar.bat`** (ou rode `docker compose up -d --build`) e acesse o endereço mostrado no fim (normalmente http://localhost:3000).
+1. Rode o projeto seguindo [Como rodar](#como-rodar) e acesse http://localhost:3000.
 2. Entre como **Funcionário**: a lista já vem com 6 produtos de exemplo (vencido, vencendo em breve e dentro da validade). Cadastre um produto, clique nos cartões de resumo para filtrar e use **Exportar PDF** / **Exportar CSV**.
 3. Clique em **Sair** e entre como **Administrador**: aparecem o botão **Excluir** e o menu **Usuários**, onde é possível criar um funcionário, mudar o nível de acesso ou desativá-lo.
 4. Use o botão de lua/sol no topo para alternar entre modo claro e escuro.
@@ -43,36 +43,41 @@ Como testar em 3 minutos:
 5. **Gestão de usuários** (só administrador): criar, mudar nível de acesso, desativar, redefinir senha, excluir
 6. **Modo claro / escuro** (preto e branco), com a escolha salva no navegador
 
-## Início rápido
+## Como rodar
 
-### Com Docker (recomendado) – Windows
+**Pré-requisitos:** Node.js 20 ou superior e MySQL 8 (ou MariaDB) rodando na porta 3306.
 
-Pré-requisito: [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+**1. Backend** (terminal 1)
 
-| Arquivo | Quando usar |
-|---|---|
-| **`configurar.bat`** | Primeira vez **e sempre que o código mudar**. Abre o Docker se precisar, escolhe portas livres, reconstrói os containers, prepara o banco, testa o login e abre o site. Em caso de erro, gera `diagnostico.txt`. |
-| **`rodar.bat`** | Uso diário: liga o sistema e abre o navegador. |
-| **`parar.bat`** | Desliga o sistema (os dados são mantidos). |
-| `configurar.bat -Resetar` | Apaga o banco e recomeça do zero. |
+```bash
+cd backEnd
+npm install
+copy .env.example .env      # Linux/Mac: cp .env.example .env
+# se o seu MySQL não usar root / senai@123, ajuste DB_USER e DB_PASSWORD no .env
+npm run db:setup            # cria o banco db_valit, as tabelas, os logins de teste e produtos de exemplo
+npm run dev
+```
 
-Se o Windows mostrar "Aviso de segurança" ao abrir um script, digite **R** e Enter.
+Deve aparecer `Banco de dados pronto.` e `API rodando na porta 3309`.
 
-Em outros sistemas (ou manualmente): `docker compose up -d --build`.
+> Alternativa ao `db:setup`: executar `backEnd/database.sql` no MySQL Workbench. As tabelas, os logins e os produtos de exemplo são completados pela API ao iniciar.
 
-### Sem Docker – Windows
+**2. Frontend** (terminal 2)
 
-Pré-requisitos: Node.js 20+ e MySQL 8 na porta 3306. Use **`sem-docker-instalar.bat`** na primeira vez e **`sem-docker-rodar.bat`** depois. Passo a passo manual em [Rodando sem Docker](#rodando-sem-docker).
+```bash
+cd front_end
+npm install
+copy .env.local.example .env.local   # Linux/Mac: cp .env.local.example .env.local
+npm run dev
+```
 
-### Endereços
+**3.** Acesse **http://localhost:3000**.
 
 | Serviço | Endereço |
 |---|---|
 | Site | http://localhost:3000 |
 | API | http://localhost:3309/api/health |
-| MySQL (Workbench) | 127.0.0.1 · porta 3307 · root / senai@123 |
-
-Se alguma dessas portas já estiver ocupada no PC (outro container, WSL, um MySQL local), o `configurar.bat` escolhe outra livre sozinho, salva no `.env` da raiz e mostra os endereços no final.
+| MySQL | 127.0.0.1:3306 · banco `db_valit` |
 
 ## Logins e níveis de acesso
 
@@ -105,13 +110,12 @@ Se alguma dessas portas já estiver ocupada no PC (outro container, WSL, um MySQ
 
 - O **frontend** nunca acessa o banco: tudo passa pela API.
 - A **API** confere login (JWT) e nível de acesso em toda requisição, calcula o status de validade e gera os relatórios.
-- No Docker, cada parte roda num container (`valit-frontend`, `valit-backend`, `valit-db`), definidos em `docker-compose.yml`.
 
 | Camada | Tecnologia | Bibliotecas |
 |---|---|---|
 | Frontend | Next.js 16.4.5 + React 19 (App Router, componentes client) | @fontsource/poppins |
 | Backend | Node.js 22 + Express 4 | mysql2, bcryptjs, jsonwebtoken, pdfkit, cors, dotenv |
-| Banco | MySQL 8.4 (Docker) / MySQL 8 ou MariaDB (local) | — |
+| Banco | MySQL 8 (ou MariaDB) | — |
 
 ## Estrutura de pastas
 
@@ -119,8 +123,8 @@ Se alguma dessas portas já estiver ocupada no PC (outro container, WSL, um MySQ
 projeto_valit/
 ├── backEnd/
 │   ├── server.js                  # inicia a API: migra o banco e abre a porta
-│   ├── database.sql               # script do banco (Workbench / init do Docker)
-│   ├── scripts/setupDb.js         # npm run db:setup (modo sem Docker)
+│   ├── database.sql               # script do banco (Workbench)
+│   ├── scripts/setupDb.js         # npm run db:setup
 │   ├── assets/logo.png            # logo usada no PDF
 │   └── src/
 │       ├── database/
@@ -152,9 +156,7 @@ projeto_valit/
 │       │   └── ThemeToggle.jsx    # modo claro/escuro
 │       ├── services/              # api.js (fetch + token), authService, produtoService, usuarioService
 │       └── utils/formatar.js      # datas dd/mm/aaaa, textos de prazo e status
-├── docker-compose.yml
-├── configurar.bat / configurar.ps1, rodar.bat, parar.bat
-└── sem-docker-instalar.bat, sem-docker-rodar.bat
+└── README.md
 ```
 
 **Camadas do backend:** `routes` (URL + permissões) → `controllers` (valida e responde) → `models` (SQL). Regras compartilhadas ficam em `utils`.
@@ -288,7 +290,7 @@ No frontend, `AppShell` redireciona quem não está logado e, com `apenasAdmin`,
 3. **Controller:** valide e normalize o campo em `validar()` de `produtoController.js`.
 4. **Relatório:** se precisar, adicione a coluna em `relatorioController.js` (CSV e PDF).
 5. **Frontend:** adicione o campo no estado `VAZIO` e no formulário de `ProdutoForm.jsx` e, se quiser, uma coluna em `produtos/page.jsx`.
-6. **Teste:** rode `configurar.bat` (Docker reconstrói tudo) e confira o fluxo nos dois perfis.
+6. **Teste:** reinicie a API (`npm run dev` já recarrega sozinho) e confira o fluxo nos dois perfis.
 
 Nova rota protegida no backend:
 
@@ -307,13 +309,13 @@ module.exports = router;
 
 ## Variáveis de ambiente
 
-**backEnd/.env** (copie de `.env.example`; no Docker vêm do `docker-compose.yml`)
+**backEnd/.env** (copie de `.env.example`)
 
 | Variável | Padrão | Descrição |
 |---|---|---|
 | PORT | 3309 | Porta da API |
 | FRONTEND_URL | http://localhost:3000 | Origem liberada no CORS |
-| DB_HOST / DB_PORT | 127.0.0.1 / 3306 | MySQL (`db` dentro do Docker) |
+| DB_HOST / DB_PORT | 127.0.0.1 / 3306 | Endereço do MySQL |
 | DB_USER / DB_PASSWORD | root / senai@123 | Credenciais do MySQL |
 | DB_NAME | db_valit | Nome do banco |
 | JWT_SECRET | (obrigatória) | Chave de assinatura dos tokens |
@@ -323,45 +325,17 @@ module.exports = router;
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| NEXT_PUBLIC_API_URL | http://localhost:3309/api | Endereço da API usado pelo navegador (no Docker, definido como build arg) |
+| NEXT_PUBLIC_API_URL | http://localhost:3309/api | Endereço da API usado pelo navegador |
 
-**.env na raiz** (criado pelo `configurar.bat`): `WEB_PORT`, `API_PORT` e `DB_HOST_PORT`, as portas livres escolhidas no PC (padrão 3000, 3309 e 3307).
-
-## Rodando sem Docker
-
-```bash
-cd backEnd
-npm install
-copy .env.example .env      # ajuste DB_USER / DB_PASSWORD se precisar
-npm run db:setup            # cria banco, tabelas, logins de teste e produtos de exemplo
-npm run dev                 # API com recarga automática
-
-# outro terminal
-cd front_end
-npm install
-copy .env.local.example .env.local
-npm run dev                 # http://localhost:3000
-```
+## Comandos
 
 | Comando | Pasta | O que faz |
 |---|---|---|
-| `npm run dev` | backEnd | API com `node --watch` |
+| `npm run dev` | backEnd | API com recarga automática (`node --watch`) |
 | `npm start` | backEnd | API sem recarga |
-| `npm run db:setup` | backEnd | Cria/atualiza o banco local |
+| `npm run db:setup` | backEnd | Cria/atualiza o banco |
 | `npm run dev` | front_end | Next.js em modo desenvolvimento |
 | `npm run build` / `npm start` | front_end | Build e servidor de produção |
-
-## Docker
-
-```bash
-docker compose up -d --build     # sobe/reconstrói
-docker compose ps                # estado dos containers
-docker compose logs -f backend   # logs da API
-docker compose down              # para (mantém o banco)
-docker compose down -v           # para e APAGA o banco
-```
-
-O banco fica no volume `valit-db-data`. O `database.sql` roda só na criação do volume; o restante vem do `migrate.js`.
 
 ## Roteiro de testes manuais
 
@@ -379,11 +353,10 @@ O banco fica no volume `valit-db-data`. O `database.sql` roda só na criação d
 
 | Sintoma | Causa provável | Solução |
 |---|---|---|
-| "Não foi possível conectar ao servidor" | API desligada | `rodar.bat` ou `docker compose ps` |
-| Site abre em outra porta (ex.: 3001) | A 3000 estava ocupada | Normal: use o endereço mostrado no fim do `configurar.bat` |
-| "Banco indisponível (tentativa N)" nos logs | MySQL ainda subindo | Aguarde; se persistir, `configurar.bat -Resetar` |
-| Aviso de segurança do Windows | Arquivo baixado da internet | Digite R + Enter, ou `Get-ChildItem -Recurse \| Unblock-File` |
-| Mudança no código não aparece | Container antigo | Rode `configurar.bat` (reconstrói) |
+| "Não foi possível conectar ao servidor" na tela | API desligada ou `.env.local` faltando | Rode `npm run dev` no `backEnd` e confira o `front_end/.env.local` |
+| "Banco indisponível (tentativa N)" no terminal da API | MySQL desligado ou senha errada | Ligue o MySQL e confira `DB_USER` / `DB_PASSWORD` no `backEnd/.env` |
+| `JWT_SECRET não definido` | Falta o `backEnd/.env` | `copy .env.example .env` |
+| Porta 3000 ou 3309 em uso | Outro programa na porta | Feche o programa ou troque `PORT` (API) / use `npm run dev -- -p 3001` (site) e ajuste `FRONTEND_URL` / `NEXT_PUBLIC_API_URL` |
 
 ## Como contribuir
 
@@ -393,4 +366,4 @@ O banco fica no volume `valit-db-data`. O `database.sql` roda só na criação d
 4. Teste com o roteiro acima
 5. `git push -u origin feature/nome-da-funcionalidade` e abra um Pull Request para `main`
 
-Nunca suba `.env`, `node_modules` ou `diagnostico.txt` (já estão no `.gitignore`).
+Nunca suba `.env`, `.env.local` ou `node_modules` (já estão no `.gitignore`).
